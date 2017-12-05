@@ -1,0 +1,12 @@
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\bin\Debug\PCFReader.exe.config
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\bin\Debug\PCFReader.exe
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\bin\Debug\PCFReader.pdb
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\obj\Debug\PCFParse.csproj.CoreCompileInputs.cache
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\obj\Debug\PCFReader.exe
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\obj\Debug\PCFReader.pdb
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\bin\Debug\PCFReader.exe.config
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\bin\Debug\PCFReader.exe
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\bin\Debug\PCFReader.pdb
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\obj\Debug\PCFParse.csproj.CoreCompileInputs.cache
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\obj\Debug\PCFReader.exe
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\obj\Debug\PCFReader.pdb

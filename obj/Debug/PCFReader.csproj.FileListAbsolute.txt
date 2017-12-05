@@ -1,0 +1,7 @@
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\bin\Debug\PCFReader.exe.config
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\bin\Debug\PCFReader.exe
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\bin\Debug\PCFReader.pdb
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\obj\Debug\PCFReader.csprojResolveAssemblyReference.cache
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\obj\Debug\PCFReader.csproj.CoreCompileInputs.cache
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\obj\Debug\PCFReader.exe
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\Tests\PCFReader\PCFReader\obj\Debug\PCFReader.pdb
