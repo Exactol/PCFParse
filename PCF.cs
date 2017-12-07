@@ -30,6 +30,7 @@ namespace PCFReader
 
         public void GetParticleNames()
         {
+            Console.WriteLine("\n-----Particle Names-----");
             if (Elements != null && Elements.Count != 0)
             {
                 foreach (var element in Elements)
@@ -67,7 +68,7 @@ namespace PCFReader
     public struct DmxAttribute
     {
         ushort typeNameIndex; //String dict index
-        char attributeType; //https://developer.valvesoftware.com/wiki/PCF_File_Format for attribute table
+        byte attributeType; //https://developer.valvesoftware.com/wiki/PCF_File_Format for attribute table
 
     }
 }

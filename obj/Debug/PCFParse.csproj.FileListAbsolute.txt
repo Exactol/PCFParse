@@ -10,3 +10,4 @@ C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFPar
 C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\obj\Debug\PCFParse.csproj.CoreCompileInputs.cache
 C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\obj\Debug\PCFReader.exe
 C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\obj\Debug\PCFReader.pdb
+C:\Users\10zil\OneDrive\Documents\Visual Studio 2017\Projects\C#\PCFParse\PCFParse\obj\Debug\PCFParse.csprojResolveAssemblyReference.cache

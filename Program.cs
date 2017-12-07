@@ -13,7 +13,7 @@ namespace PCFReader
         {
             Reader pcfReader = new Reader("butterflies.pcf");
             PCF pcf = pcfReader.Read();
-            pcf.GetParticleNames();
+            //pcf.GetParticleNames();
             
             Console.ReadLine();
         }
