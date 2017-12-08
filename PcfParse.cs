@@ -117,7 +117,7 @@ namespace PCFReader
             _binaryReader.ReadInt16();
 
             //Different versions have different string dict sizes
-            if (pcf.BinaryVersion != 4)
+            if (pcf.BinaryVersion != 4 && pcf.BinaryVersion != 5)
             {
                 pcf.NumDictStrings = _binaryReader.ReadInt16(); //Read as short
             }
@@ -138,13 +138,13 @@ namespace PCFReader
         private void ReadElementDict()
         {
             Console.WriteLine("\n-----Element Dictionary-----");
-            pcf.NumElements = _binaryReader.ReadInt32();
+            pcf.NumElements = (int)_binaryReader.ReadUInt32();
             
             //Read the elements
             Console.WriteLine($"Number Of Elements: {pcf.NumElements}");
             for (int i = 0; i < pcf.NumElements; i++)
             {
-                if (pcf.BinaryVersion != 4)
+                if (pcf.BinaryVersion != 4 && pcf.BinaryVersion != 5)
                 {
                     DmxElement element;
                     //Get name index and string from string dict
@@ -165,7 +165,7 @@ namespace PCFReader
 
                     pcf.Elements.Add(element);
                 }
-                else
+                else if (pcf.BinaryVersion == 4)
                 {
                     DmxElementV4 element;
                     //Get name index and string from string dict
@@ -187,6 +187,31 @@ namespace PCFReader
 
                     pcf.ElementsV4.Add(element);
                 }
+                else
+                {
+                    DmxElementV4 element;
+                    //Get name index and string from string dict
+                    element.typeNameIndex = _binaryReader.ReadUInt16();
+                    element.typeName = pcf.StringDict[element.typeNameIndex];
+
+                    //Get element index
+                    element.elementNameIndex = _binaryReader.ReadUInt16();
+                    element.elementName = pcf.StringDict[element.elementNameIndex];
+
+
+                    Console.WriteLine($"\nType name: {element.typeName}");
+                    Console.WriteLine($"Element name: {element.elementName}");
+                    //It seems pcf binary v5 has 20 byte buffer
+                    List<byte> byteBuf = new List<byte>();
+                    for (int z = 0; z < 20; z++)
+                    {
+                        byteBuf.Add(_binaryReader.ReadByte());
+                    }
+                    element.dataSignature = byteBuf.ToArray();
+                    byteBuf.Clear();
+
+                    pcf.ElementsV4.Add(element);
+                }
             }
         }
 
@@ -198,6 +223,12 @@ namespace PCFReader
             
             List<ArrayList> elementList = new List<ArrayList>();
             //List<ArrayList> elementList = new List<List<ArrayList>>();
+
+            //TODO add support for binary 5, undocumented not sure how to read
+            if (pcf.BinaryVersion == 5)
+            {
+                return;
+            }
 
             for (int i = 0; i < pcf.NumElements; i++)
             {
@@ -215,7 +246,7 @@ namespace PCFReader
                     dmxAttribute.typeNameIndex = _binaryReader.ReadUInt16();
                     dmxAttribute.attributeType = _binaryReader.ReadByte();
                     dmxAttribute.typeName = pcf.StringDict[dmxAttribute.typeNameIndex];
-
+                    
                     //Console.WriteLine($"Number Of Element Attributes: {numElementAttribs}");
                     //Console.WriteLine($"TypeName Index: {dmxAttribute.typeNameIndex}");
                     //Console.WriteLine($"TypeName: {pcf.StringDict[dmxAttribute.typeNameIndex]}");
@@ -238,6 +269,9 @@ namespace PCFReader
         private dynamic ReadAttrib(DmxAttribute attribute)
         {
             int attributeType = attribute.attributeType;
+
+            //number of elements in an attribute array
+            int numArrayItems = 0;
 
             //Read different data types depending on what attribute type is
             switch (attributeType)
@@ -283,7 +317,7 @@ namespace PCFReader
 
                     DmxAttributeString dmxString = new DmxAttributeString(attribute);
 
-                    if (pcf.BinaryVersion != 4)
+                    if (pcf.BinaryVersion != 4 && pcf.BinaryVersion != 5)
                         dmxString.attribString = ReadNullTerminatedString();
                     else
                     {
@@ -410,17 +444,216 @@ namespace PCFReader
                 case (ELEMENT_ARRAY):
                     //Console.WriteLine("Attribute Type: Element Array");
 
-                    int numElements = _binaryReader.ReadInt32();
-                    DmxAttribute[] elementArray = new DmxAttribute[numElements];
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] elementArray = new DmxAttribute[numArrayItems];
 
-                    for (int i = 0; i < numElements; i++)
+                    for (int i = 0; i < numArrayItems; i++)
                     {
                         DmxAttribute tempAttribute = new DmxAttribute();
                         tempAttribute.attributeType = ELEMENT;
                         elementArray[i] = ReadAttrib(tempAttribute);
                     }
                     return elementArray;
-                    //TODO handle other arrays
+
+                case (INTEGER_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] integerArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = INTEGER;
+                        integerArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return integerArray;
+
+                case (FLOAT_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] floatArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = FLOAT;
+                        floatArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return floatArray;
+
+                case (BOOLEAN_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] booleanArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = BOOLEAN;
+                        booleanArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return booleanArray;
+
+                case (STRING_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] stringArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = STRING;
+                        stringArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return stringArray;
+
+                case (BINARY_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] binaryArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = BINARY;
+
+                        //Recursive call
+                        binaryArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return binaryArray;
+
+                case (TIME_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] timeArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = TIME;
+
+                        //Recursive call
+                        timeArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return timeArray;
+
+                case (COLOR_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] colorArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = COLOR;
+
+                        //Recursive call
+                        colorArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return colorArray;
+
+                case (VECTOR2_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] vec2Array = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = VECTOR2;
+
+                        //Recursive call
+                        vec2Array[i] = ReadAttrib(tempAttribute);
+                    }
+                    return vec2Array;
+
+                case (VECTOR3_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] vec3Array = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = VECTOR3;
+
+                        //Recursive call
+                        vec3Array[i] = ReadAttrib(tempAttribute);
+                    }
+                    return vec3Array;
+
+                case (VECTOR4_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] vec4Array = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = VECTOR4;
+
+                        //Recursive call
+                        vec4Array[i] = ReadAttrib(tempAttribute);
+                    }
+                    return vec4Array;
+
+                case (QANGLE_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] qAngleArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = QANGLE;
+
+                        //Recursive call
+                        qAngleArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return qAngleArray;
+
+                case (QUATERNION_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] quatArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = QUATERNION;
+
+                        //Recursive call
+                        quatArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return quatArray;
+
+                case (MATRIX_ARRAY):
+                    //Console.WriteLine("Attribute Type: Element Array");
+
+                    numArrayItems = _binaryReader.ReadInt32();
+                    DmxAttribute[] matrixArray = new DmxAttribute[numArrayItems];
+
+                    for (int i = 0; i < numArrayItems; i++)
+                    {
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = MATRIX;
+
+                        //Recursive call
+                        matrixArray[i] = ReadAttrib(tempAttribute);
+                    }
+                    return matrixArray;
             }
             //Default return null
             return null;

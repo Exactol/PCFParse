@@ -32,45 +32,102 @@ namespace PCFReader
         public void GetParticleNames()
         {
             Console.WriteLine("\n-----Particle Names-----");
-            if (Elements != null && Elements.Count != 0)
+            if (BinaryVersion != 5)
             {
-                foreach (var element in Elements)
+                if (Elements != null && Elements.Count != 0)
                 {
-                    if (element.typeName == "DmeParticleSystemDefinition")
+                    foreach (var element in Elements)
                     {
-                        Console.WriteLine(element.elementName);
+                        if (element.typeName == "DmeParticleSystemDefinition")
+                        {
+                            Console.WriteLine(element.elementName);
+                        }
                     }
                 }
             }
+            //else
+            //{
+            //    //All strings are stored in string dict of binary 5
+            //    foreach (string s in StringDict)
+            //    {
+            //        if (s.EndsWith(".vmt"))
+            //        {
+            //            Console.WriteLine(s);
+            //        }
+            //    }
+            //}
 
         }
 
         public List<string> GetMaterialNames()
         {
-            if (ElementAttributes != null)
+            if (BinaryVersion != 5)
             {
-                Console.WriteLine("\n-----Materials-----");
-                List<string> materialNames = new List<string>();
-
-                foreach (ArrayList element in ElementAttributes)
+                if (ElementAttributes != null)
                 {
-                    foreach (var attribute in element)
+                    Console.WriteLine("\n-----Materials-----");
+                    List<string> materialNames = new List<string>();
+
+                    foreach (ArrayList element in ElementAttributes)
                     {
-                        if (attribute is DmxAttributeString dmxString)
+                        foreach (var attribute in element)
                         {
-                            if (dmxString.typeName == "material")
+                            if (attribute is DmxAttributeString dmxString)
                             {
-                                materialNames.Add(dmxString.attribString);
+                                if (dmxString.typeName == "material")
+                                {
+                                    materialNames.Add(dmxString.attribString);
+                                }
+
                             }
 
+                            //DmxAttribute dmxAttribute = (DmxAttribute)attribute;
+                            //Console.WriteLine(attribute.GetType());
                         }
+                    }
 
-                        //DmxAttribute dmxAttribute = (DmxAttribute)attribute;
-                        //Console.WriteLine(attribute.GetType());
+                    return materialNames;
+                } 
+            }
+            else
+            {
+                if (StringDict != null)
+                {
+                    //All strings including materials are stored in string dict of binary 5
+                    Console.WriteLine("\n-----Materials-----");
+                    List<string> materialNames = new List<string>();
+
+                    foreach (string s in StringDict)
+                    {
+
+                        if (s.EndsWith(".vmt") || s.EndsWith(".vtf"))
+                        {
+                            materialNames.Add(s);
+                        }
+                    }
+                    return materialNames; 
+                }
+            }
+
+            return null;
+        }
+
+        public List<string> GetModelNames()
+        {
+            Console.WriteLine("\n-----Models-----");
+
+            if (StringDict != null)
+            {
+                List<string> modelList = new List<string>();
+                //All strings including model names are stored in string dict
+                foreach (string s in StringDict)
+                {
+                    if (s.EndsWith(".mdl"))
+                    {
+                        modelList.Add(s);
                     }
                 }
-
-                return materialNames;
+                return modelList;
             }
             else
             {
