@@ -11,10 +11,17 @@ namespace PCFReader
     {
         static void Main(string[] args)
         {
-            Reader pcfReader = new Reader("butterflies.pcf");
+            Reader pcfReader = new Reader("bagel_event_fx.pcf");
             PCF pcf = pcfReader.Read();
             //pcf.GetParticleNames();
-            
+
+            List<string> materialNames = pcf.GetMaterialNames();
+
+            foreach (string material in materialNames)
+            {
+                Console.WriteLine("Material: " + material);
+            }
+
             Console.ReadLine();
         }
     }

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -192,155 +194,236 @@ namespace PCFReader
         {
             Console.WriteLine("\n-----Attributes-----");
             Console.WriteLine(_binaryReader.BaseStream.Position);
+
+            
+            List<ArrayList> elementList = new List<ArrayList>();
+            //List<ArrayList> elementList = new List<List<ArrayList>>();
+
             for (int i = 0; i < pcf.NumElements; i++)
             {
+                //List that stores all types of dmxAttributes
+                ArrayList attributeList = new ArrayList();
+
                 //Get number of element attribs
                 int numElementAttribs = _binaryReader.ReadInt32();
                 for (int w = 0; w < numElementAttribs; w++)
                 {
-                    Console.WriteLine($"\n-----Index: {w}-----");
-                    ushort typeNameIndex = _binaryReader.ReadUInt16();
-                    int attributeType = _binaryReader.ReadByte();
+                    //Console.WriteLine($"\n-----Index: {w}-----");
 
-                    Console.WriteLine($"Number Of Element Attributes: {numElementAttribs}");
-                    Console.WriteLine($"TypeName Index: {typeNameIndex}");
-                    Console.WriteLine($"TypeName: {pcf.StringDict[typeNameIndex]}");
-                    Console.WriteLine($"Attribute Type: {attributeType}");
-                    ReadAttrib(attributeType);
+                    DmxAttribute dmxAttribute = new DmxAttribute();
+
+                    dmxAttribute.typeNameIndex = _binaryReader.ReadUInt16();
+                    dmxAttribute.attributeType = _binaryReader.ReadByte();
+                    dmxAttribute.typeName = pcf.StringDict[dmxAttribute.typeNameIndex];
+
+                    //Console.WriteLine($"Number Of Element Attributes: {numElementAttribs}");
+                    //Console.WriteLine($"TypeName Index: {dmxAttribute.typeNameIndex}");
+                    //Console.WriteLine($"TypeName: {pcf.StringDict[dmxAttribute.typeNameIndex]}");
+                    //Console.WriteLine($"Attribute Type: {dmxAttribute.attributeType}");
+
+                    //Read attribute info and store in list
                     
-                    Console.WriteLine("--------------------");
+                    attributeList.Add(ReadAttrib(dmxAttribute));
+
+                    //Console.WriteLine("--------------------");
                 }
+                //Add attributes to element
+                pcf.ElementAttributes.Add(attributeList);
             }
+
+            //pcf.ElementAttributes = elementList;
         }
 
-        private void ReadAttrib(int attributeType)
+        //Returns generic type
+        private dynamic ReadAttrib(DmxAttribute attribute)
         {
+            int attributeType = attribute.attributeType;
+
+            //Read different data types depending on what attribute type is
             switch (attributeType)
             {
                 case (ELEMENT):
-                    Console.WriteLine("Attribute Type: Element");
-                    int attribElement = _binaryReader.ReadInt32();
-                    Console.WriteLine($"Offset into element array: {attribElement}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Element");
+
+                    DmxAttributeElement dmxElement = new DmxAttributeElement(attribute);
+                    dmxElement.index = _binaryReader.ReadInt32();
+
+                    //Console.WriteLine($"Attribute Int Value: {dmxElement.index}");
+                    return dmxElement;
 
                 case (INTEGER):
-                    Console.WriteLine("Attribute Type: Integer");
-                    int attribInt = _binaryReader.ReadInt32();
-                    Console.WriteLine($"Attribute Int Value: {attribInt}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Integer");
+
+                    DmxAttributeInteger dmxInteger = new DmxAttributeInteger(attribute);
+                    dmxInteger.attribInt = _binaryReader.ReadInt32();
+
+                    //Console.WriteLine($"Attribute Int Value: {dmxInteger.attribInt}");
+                    return dmxInteger;
 
                 case (FLOAT):
-                    Console.WriteLine("Attribute Type: Float");
-                    float attribFloat = _binaryReader.ReadSingle();
-                    Console.WriteLine($"Attribute Float Value: {attribFloat}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Float");
+
+                    DmxAttributeFloat dmxFloat = new DmxAttributeFloat(attribute);
+                    dmxFloat.attribFloat = _binaryReader.ReadSingle();
+
+                    //Console.WriteLine($"Attribute Float Value: {dmxFloat.attribFloat}");
+                    return dmxFloat;
 
                 case (BOOLEAN):
-                    Console.WriteLine("Attribute Type: Boolean");
-                    bool attribBool = _binaryReader.ReadBoolean();
-                    Console.WriteLine($"Attribute Bool Value: {attribBool}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Boolean");
+
+                    DmxAttributeBoolean dmxBool = new DmxAttributeBoolean(attribute);
+                    dmxBool.attribBool = _binaryReader.ReadBoolean();
+                    
+                    //Console.WriteLine($"Attribute Bool Value: {dmxBool.attribBool}");
+                    return dmxBool;
 
                 case (STRING):
-                    Console.WriteLine("Attribute Type: String");
-                    string attribString = ReadNullTerminatedString();
-                    Console.WriteLine($"Attribute String Value: {attribString}");
-                    break;
+                    //Console.WriteLine("Attribute Type: String");
+
+                    DmxAttributeString dmxString = new DmxAttributeString(attribute);
+
+                    if (pcf.BinaryVersion != 4)
+                        dmxString.attribString = ReadNullTerminatedString();
+                    else
+                    {
+                        //Binary 4 pcfs store only index into string dict
+                        dmxString.stringIndex = _binaryReader.ReadUInt16();
+                        dmxString.attribString = pcf.StringDict[dmxString.stringIndex];
+                    }
+                    //Console.WriteLine($"Attribute String Value: {dmxString.attribString}");
+                    return dmxString;
 
                 case (BINARY):
-                    Console.WriteLine("Attribute Type: Binary");
-                    uint binaryLength = _binaryReader.ReadUInt32();
-                    byte[] attribBinary;
-                    List<byte> byteBuff = new List<byte>();
+                    //Console.WriteLine("Attribute Type: Binary");
 
-                    Console.WriteLine($"Binary Length: {binaryLength}");
-                    for (int y = 0; y < binaryLength; y++)
+                    DmxAttributeBinary dmxBinary = new DmxAttributeBinary(attribute);
+                    dmxBinary.length = _binaryReader.ReadUInt32();
+                    dmxBinary.attribByte = new byte[dmxBinary.length];
+
+                    //Read specified # of bytes
+                    List<byte> byteBuff = new List<byte>();
+                    //Console.WriteLine($"Binary Length: {dmxBinary.length}");
+                    for (int y = 0; y < dmxBinary.length; y++)
                     {
                         byteBuff.Add(_binaryReader.ReadByte());
                     }
-                    attribBinary = byteBuff.ToArray();
+                    dmxBinary.attribByte = byteBuff.ToArray();
                     byteBuff.Clear();
-                    Console.WriteLine($"Attribute Byte Value: {BitConverter.ToString(attribBinary)}");
-                    break;
+
+                    //Console.WriteLine($"Attribute Byte Value: {BitConverter.ToString(dmxBinary.attribByte)}");
+                    return dmxBinary;
 
                 case (TIME):
-                    Console.WriteLine("Attribute Type: Time");
-                    int attribTime = _binaryReader.ReadInt32();
-                    Console.WriteLine($"Attribute Time Value: {attribTime}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Time");
+
+                    DmxAttributeTime dmxTime = new DmxAttributeTime(attribute);
+                    dmxTime.attribTime = _binaryReader.ReadInt32();
+
+                    //Console.WriteLine($"Attribute Time Value: {dmxTime.attribTime}");
+                    return dmxTime;
 
                 case (COLOR):
-                    Console.WriteLine("Attribute Type: Color");
-                    byte[] attribRed = { _binaryReader.ReadByte() };
-                    byte[] attribGreen = { _binaryReader.ReadByte() };
-                    byte[] attribBlue = { _binaryReader.ReadByte() };
-                    byte[] attribAlpha = { _binaryReader.ReadByte() };
-                    Console.WriteLine($"Attribute Color Value: {BitConverter.ToString(attribRed)}, {BitConverter.ToString(attribGreen)}, {BitConverter.ToString(attribBlue)}, {BitConverter.ToString(attribAlpha)}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Color");
+
+                    DmxAttributeColor dmxColor = new DmxAttributeColor(attribute);
+                    dmxColor.attribRed = _binaryReader.ReadByte();
+                    dmxColor.attribGreen = _binaryReader.ReadByte();
+                    dmxColor.attribBlue = _binaryReader.ReadByte();
+                    dmxColor.attribAlpha = _binaryReader.ReadByte();
+
+                    //Console.WriteLine($"Attribute Color Value: {dmxColor.attribRed}, {dmxColor.attribBlue}, {dmxColor.attribGreen}, {dmxColor.attribAlpha}");
+                    return dmxColor;
 
                 case (VECTOR2):
-                    Console.WriteLine("Attribute Type: Vector2");
-                    float attribV2X = _binaryReader.ReadSingle();
-                    float attribV2Y = _binaryReader.ReadSingle();
-                    Console.WriteLine($"Attribute Vector2 Value: {attribV2X}, {attribV2Y}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Vector2");
+
+                    DmxAttributeVector2 dmxVec2 = new DmxAttributeVector2(attribute);
+                    dmxVec2.attribX = _binaryReader.ReadSingle();
+                    dmxVec2.attribY = _binaryReader.ReadSingle();
+
+                    //Console.WriteLine($"Attribute Vector2 Value: {dmxVec2.attribX}, {dmxVec2.attribY}");
+                    return dmxVec2;
 
                 case (VECTOR3):
-                    Console.WriteLine("Attribute Type: Vector3");
-                    float attribV3X = _binaryReader.ReadSingle();
-                    float attribV3Y = _binaryReader.ReadSingle();
-                    float attribV3Z = _binaryReader.ReadSingle();
-                    Console.WriteLine($"Attribute Vector3 Value: {attribV3X}, {attribV3Y}, {attribV3Z}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Vector3");
+
+                    DmxAttributeVector3 dmxVec3 = new DmxAttributeVector3(attribute);
+                    dmxVec3.attribX = _binaryReader.ReadSingle();
+                    dmxVec3.attribY = _binaryReader.ReadSingle();
+                    dmxVec3.attribZ = _binaryReader.ReadSingle();
+
+                    //Console.WriteLine($"Attribute Vector3 Value: {dmxVec3.attribX}, {dmxVec3.attribY}, {dmxVec3.attribZ}");
+                    return dmxVec3;
 
                 case (VECTOR4):
-                    Console.WriteLine("Attribute Type: Vector4");
-                    float attribV4X = _binaryReader.ReadSingle();
-                    float attribV4Y = _binaryReader.ReadSingle();
-                    float attribV4Z = _binaryReader.ReadSingle();
-                    float attribV4W = _binaryReader.ReadSingle();
-                    Console.WriteLine($"Attribute Vector3 Value: {attribV4X}, {attribV4Y}, {attribV4Z}, {attribV4W}");
-                    break;
+                    //Console.WriteLine("Attribute Type: Vector4");
+
+                    DmxAttributeVector4 dmxVec4 = new DmxAttributeVector4(attribute);
+                    dmxVec4.attribX = _binaryReader.ReadSingle();
+                    dmxVec4.attribY = _binaryReader.ReadSingle();
+                    dmxVec4.attribZ = _binaryReader.ReadSingle();
+                    dmxVec4.attribW = _binaryReader.ReadSingle();
+
+                    //Console.WriteLine($"Attribute Vector3 Value: {dmxVec4.attribX}, {dmxVec4.attribY}, {dmxVec4.attribZ}, {dmxVec4.attribW}");
+                    return dmxVec4;
 
                 case (QANGLE):
-                    Console.WriteLine("Attribute Type: QAngle");
-                    float attribQX = _binaryReader.ReadSingle();
-                    float attribQY = _binaryReader.ReadSingle();
-                    float attribQZ = _binaryReader.ReadSingle();
-                    Console.WriteLine($"Attribute QAngle Value: {attribQX}, {attribQY}, {attribQZ}");
-                    break;
+                    //Console.WriteLine("Attribute Type: QAngle");
+
+                    DmxAttributeQAngle dmxQangle = new DmxAttributeQAngle(attribute);
+                    dmxQangle.attribX = _binaryReader.ReadSingle();
+                    dmxQangle.attribY = _binaryReader.ReadSingle();
+                    dmxQangle.attribZ = _binaryReader.ReadSingle();
+
+                    //Console.WriteLine($"Attribute QAngle Value: {dmxQangle.attribX}, {dmxQangle.attribY}, {dmxQangle.attribZ}");
+                    return dmxQangle;
 
                 case (QUATERNION):
-                    Console.WriteLine("Attribute Type: Quaternion");
-                    float attribQTX = _binaryReader.ReadSingle();
-                    float attribQTY = _binaryReader.ReadSingle();
-                    float attribQTZ = _binaryReader.ReadSingle();
-                    float attribQTW = _binaryReader.ReadSingle();
-                    Console.WriteLine($"Attribute Vector3 Value: {attribQTX}, {attribQTY}, {attribQTZ}, {attribQTW}");
-                break;
+                    //Console.WriteLine("Attribute Type: Quaternion");
+
+                    DmxAttributeQuaternion dmxQuat = new DmxAttributeQuaternion(attribute);
+                    dmxQuat.attribX = _binaryReader.ReadSingle();
+                    dmxQuat.attribY = _binaryReader.ReadSingle();
+                    dmxQuat.attribZ = _binaryReader.ReadSingle();
+                    dmxQuat.attribW = _binaryReader.ReadSingle();
+
+
+                    //Console.WriteLine($"Attribute Vector3 Value: {dmxQuat.attribX}, {dmxQuat.attribY}, {dmxQuat.attribZ}, {dmxQuat.attribW}");
+                    return dmxQuat;
 
                 case (MATRIX):
-                    Console.WriteLine("Attribute Type: Matrix");
-                    byte[] attribMatrix;
+                    //Console.WriteLine("Attribute Type: Matrix");
+
+                    DmxAttributeMatrix dmxMatrix = new DmxAttributeMatrix(attribute);
+                    dmxMatrix.attribByte = new byte[64];
+
                     List<byte> byteBuff2 = new List<byte>();
                     for (int y = 0; y < 64; y++)
                     {
                         byteBuff2.Add(_binaryReader.ReadByte());
                     }
-                    attribMatrix = byteBuff2.ToArray();
+                    dmxMatrix.attribByte = byteBuff2.ToArray();
                     byteBuff2.Clear();
-                    break;
+                    return dmxMatrix;
 
                 case (ELEMENT_ARRAY):
-                    Console.WriteLine("Attribute Type: Element Array");
+                    //Console.WriteLine("Attribute Type: Element Array");
+
                     int numElements = _binaryReader.ReadInt32();
+                    DmxAttribute[] elementArray = new DmxAttribute[numElements];
+
                     for (int i = 0; i < numElements; i++)
                     {
-                        ReadAttrib(ELEMENT);
+                        DmxAttribute tempAttribute = new DmxAttribute();
+                        tempAttribute.attributeType = ELEMENT;
+                        elementArray[i] = ReadAttrib(tempAttribute);
                     }
-                    break;
+                    return elementArray;
                     //TODO handle other arrays
-            } 
+            }
+            //Default return null
+            return null;
         }
 
         private string ReadNullTerminatedString()
