@@ -1,4 +1,4 @@
 # PCFParse
 A simple pcf parser written in C#
 
-Does not support reading DMXAttributes yet, probably will get around to it eventually
+Supports all formats, however binary v5 has only limited support.
