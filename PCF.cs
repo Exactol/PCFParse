@@ -139,65 +139,7 @@ namespace PCFReader
         {
             Console.WriteLine("\n-----FileStructure-----");
 
-            //OrganizeFilestructure(ElementAttributes[1], 0);
-            //OrganizeFilestructure(ElementAttributes[2], 0);
-            List<Particle> particles = new List<Particle>();
-            int index = 0;
-
-
-            Particle particle = new Particle()
-            {
-                elements = new List<DmxElement>(),
-                attributes = new ArrayList()
-            };
-
-            foreach (DmxElement element in Elements)
-            {
-                if (element.typeName == "DmeParticleSystemDefinition")
-                {
-                    if (index != 0)
-                    {
-                        particles.Add(particle);
-                    }
-                    
-                    //Console.WriteLine("\n-----New Particle-----");
-                    particle = new Particle()
-                    {
-                        elements = new List<DmxElement>(),
-                        attributes = new ArrayList()
-                        
-                    };
-
-                    particle.name = element.elementName;
-
-                }
-                else
-                {
-                    particle.elements.Add(element);
-                }
-                //Console.WriteLine("Element: " + element.elementName);
-                //Console.WriteLine(element.typeName);
-
-                index++;
-            }
-
-            //foreach (Particle particleDef in particles)
-            //{
-            //    Console.WriteLine("\n" + particleDef.name);
-            //    foreach (DmxElement element in particleDef.elements)
-            //    {
-            //        Console.WriteLine("     " + element.elementName);
-            //    }
-            //}
             int indexAttribs = 0;
-            //foreach (Particle part in particles)
-            //{
-            //    for (int j = 0; j < part.elements.Count; j++)
-            //    {
-            //        part.attributes.Add(ElementAttributes[indexAttribs]);
-            //        indexAttribs++;
-            //    }
-            //}
 
             foreach (DmxElement element in Elements)
             {
@@ -206,191 +148,132 @@ namespace PCFReader
                 indexAttribs++;
             }
 
-            foreach (Particle particleTest in particles)
+            List<Particle> particles = new List<Particle>();
+
+            Particle particle = new Particle
             {
-                Console.WriteLine($"\n-----{particleTest.name}-----");
-                int i = 0;
-                foreach (DmxElement element in particleTest.elements)
+                elements = new List<DmxElement>()
+            };
+
+            int index = 0;
+            foreach (DmxElement element in Elements)
+            {
+                //If element type is a particlesystemdefinition, add current particle to list and create new one
+                if (element.typeName == "DmeParticleSystemDefinition")
+                {
+                    if (index != 0)
+                    {
+                        particles.Add(particle);
+                    }
+                    
+                    particle = new Particle()
+                    {
+                        elements = new List<DmxElement>(),
+                        
+                    };
+
+                    particle.name = element.elementName;
+
+                }
+                else
+                {
+                    //TODO investigate child particles incorrectly cutting off elements from parent particle. might have to do with DmeParticleSystemDefinition
+                    //If not a particle system definition, add element to particle
+                    particle.elements.Add(element);
+                }
+
+                index++;
+            }
+
+            foreach (Particle p in particles)
+            {
+                Console.WriteLine($"\n-----{p.name}-----");
+
+                foreach (DmxElement element in p.elements)
                 {
                     Console.WriteLine("    Element: " + element.elementName);
-                    PrintStuff(element.attributes);
-                    //foreach (var attribute in element.attributes)
-                    //{
-                        
-                    //}
-                    //try
-                    //{
-                    //    PrintStuff((ArrayList)element.attributes[i]);
-                    //}
-                    //catch (Exception)
-                    //{
-                    //    Console.WriteLine("Error");
-                    //}
-                    
-
-                    
-                    //Console.WriteLine("        Value: " + particleTest.attributes[i]);
-                    //i++;
+                    PrintFilestructure(element.attributes);
                 }
 
             }
-            //OrganizeFilestructure(ElementAttributes[0], 0);
-            //OrganizeFilestructure(ElementAttributes[3], 0);
 
         }
 
-        private void PrintStuff(ArrayList elements)
+        private void PrintFilestructure(ArrayList elements, int depth = 1)
         {
-            string spacing = "        ";
+            string spacing = String.Concat(Enumerable.Repeat("       ", depth));
+
+            
             foreach (var attribute in elements)
             {
-                #region BigSwitch2
+                //Big if else switch to test for what type of attribute the attribute is
+                #region BigSwitch
                 if (attribute is DmxAttribute[] attributeArray)
                 {
                     Console.WriteLine(spacing + "-----Attribute array-----");
-                    PrintStuff(new ArrayList(attributeArray));
+                    PrintFilestructure(new ArrayList(attributeArray), depth + 1);
                 }
                 else if (attribute is DmxAttributeElement elementTest)
                 {
-                    Console.WriteLine(spacing + "Attribute Element");
+                    Console.WriteLine(spacing + Elements[elementTest.index].typeName);
                     Console.WriteLine(spacing + spacing + Elements[elementTest.index].elementName);
-                    Console.WriteLine(spacing + spacing + Elements[elementTest.index].typeName);
+                    //Console.WriteLine(spacing + spacing + Elements[elementTest.index].typeName);
 
                 }
                 else if (attribute is DmxAttributeInteger integerAttrib)
                 {
-                    Console.WriteLine(spacing + "Integer: " + integerAttrib.attribInt);
+                    Console.WriteLine(spacing +$"{integerAttrib.typeName}: {integerAttrib.attribInt}");
                 }
                 else if (attribute is DmxAttributeFloat floatAttrib)
                 {
-                    Console.WriteLine(spacing + "Float: " + floatAttrib.attribFloat);
+                    Console.WriteLine(spacing + $"{floatAttrib.typeName}: {floatAttrib.attribFloat}");
                 }
                 else if (attribute is DmxAttributeBoolean boolAttrib)
                 {
 
-                    Console.WriteLine(spacing + "Bool: " + boolAttrib.attribBool);
+                    Console.WriteLine(spacing + $"{boolAttrib.typeName}: {boolAttrib.attribBool}");
                 }
                 else if (attribute is DmxAttributeString stringAttrib)
                 {
-                    Console.WriteLine(spacing + "String: " + stringAttrib.attribString);
+                    Console.WriteLine(spacing + $"{stringAttrib.typeName}: {stringAttrib.attribString}");
                 }
                 else if (attribute is DmxAttributeBinary binaryAttrib)
                 {
-                    Console.WriteLine(spacing + "Binary: " + binaryAttrib.attribByte);
+                    Console.WriteLine(spacing + $"{binaryAttrib.typeName}: {binaryAttrib.attribByte}");
                 }
                 else if (attribute is DmxAttributeTime timeAttrib)
                 {
-                    Console.WriteLine(spacing + "Time: " + timeAttrib.attribTime);
+                    Console.WriteLine(spacing + $"{timeAttrib.typeName}: {timeAttrib.attribTime}");
                 }
                 else if (attribute is DmxAttributeColor colorAttrib)
                 {
-                    Console.WriteLine(spacing + $"Color: {colorAttrib.attribRed}, {colorAttrib.attribGreen}, + {colorAttrib.attribBlue}, {colorAttrib.attribAlpha}");
+                    Console.WriteLine(spacing + $"{colorAttrib.typeName}: {colorAttrib.attribRed}, {colorAttrib.attribGreen}, + {colorAttrib.attribBlue}, {colorAttrib.attribAlpha}");
                 }
                 else if (attribute is DmxAttributeVector2 vec2Attrib)
                 {
-                    Console.WriteLine(spacing + $"Vec2: {vec2Attrib.attribX}, {vec2Attrib.attribY}");
+                    Console.WriteLine(spacing + $"{vec2Attrib.typeName}: {vec2Attrib.attribX}, {vec2Attrib.attribY}");
                 }
                 else if (attribute is DmxAttributeVector3 vec3Attrib)
                 {
-                    Console.WriteLine(spacing + $"Vec3: {vec3Attrib.attribX}, {vec3Attrib.attribY}, {vec3Attrib.attribZ}");
+                    Console.WriteLine(spacing + $"{vec3Attrib.typeName}: {vec3Attrib.attribX}, {vec3Attrib.attribY}, {vec3Attrib.attribZ}");
                 }
                 else if (attribute is DmxAttributeVector4 vec4Attrib)
                 {
-                    Console.WriteLine(spacing + $"Vec4: {vec4Attrib.attribX}, {vec4Attrib.attribY}, {vec4Attrib.attribZ}, {vec4Attrib.attribW}");
+                    Console.WriteLine(spacing + $"{vec4Attrib.typeName}: {vec4Attrib.attribX}, {vec4Attrib.attribY}, {vec4Attrib.attribZ}, {vec4Attrib.attribW}");
                 }
                 else if (attribute is DmxAttributeQAngle qAngleAttrib)
                 {
-                    Console.WriteLine(spacing + $"qAngle: {qAngleAttrib.attribX}, {qAngleAttrib.attribY}, {qAngleAttrib.attribZ}");
+                    Console.WriteLine(spacing + $"{qAngleAttrib.typeName}: {qAngleAttrib.attribX}, {qAngleAttrib.attribY}, {qAngleAttrib.attribZ}");
                 }
                 else if (attribute is DmxAttributeQuaternion quatAttrib)
                 {
-                    Console.WriteLine(spacing + $"Quaternion: {quatAttrib.attribX}, {quatAttrib.attribY}, {quatAttrib.attribZ}, {quatAttrib.attribW}");
+                    Console.WriteLine(spacing + $"{quatAttrib.typeName}: {quatAttrib.attribX}, {quatAttrib.attribY}, {quatAttrib.attribZ}, {quatAttrib.attribW}");
                 }
                 else if (attribute is DmxAttributeMatrix matrixAttrib)
                 {
                     Console.WriteLine(spacing + "Matrix");
                 }
                 #endregion
-            }
-        }
-
-
-        private void OrganizeFilestructure(ArrayList elements, int depth)
-        {
-            string spacing = String.Concat(Enumerable.Repeat("   ", depth+1));
-            Console.WriteLine($"\n-----Depth: {depth}-----\n");
-
-            foreach (var attribute in elements)
-            {
-                #region Big switch
-                if (attribute is DmxAttribute[] attributeArray)
-                {
-                    Console.WriteLine("\n-------------------Recursive Call-------------------");
-                    OrganizeFilestructure(new ArrayList(attributeArray), depth + 1);
-                }
-                else if (attribute is DmxAttributeElement element)
-                {
-                    Console.WriteLine("\n-----Element-----");
-                    Console.WriteLine(Elements[element.index].elementName);
-                    Console.WriteLine(Elements[element.index].typeName);
-
-                }
-                else if (attribute is DmxAttributeInteger integerAttrib)
-                {
-                    Console.WriteLine(spacing + "Integer: " + integerAttrib.attribInt);
-                }
-                else if (attribute is DmxAttributeFloat floatAttrib)
-                {
-                    Console.WriteLine(spacing + "Float: " + floatAttrib.attribFloat);
-                }
-                else if (attribute is DmxAttributeBoolean boolAttrib)
-                {
-
-                    Console.WriteLine(spacing + "Bool: " + boolAttrib.attribBool);
-                }
-                else if (attribute is DmxAttributeString stringAttrib)
-                {
-                    Console.WriteLine(spacing + "String: " + stringAttrib.attribString);
-                }
-                else if (attribute is DmxAttributeBinary binaryAttrib)
-                {
-                    Console.WriteLine(spacing + "Binary: " + binaryAttrib.attribByte);
-                }
-                else if (attribute is DmxAttributeTime timeAttrib)
-                {
-                    Console.WriteLine(spacing + "Time: " + timeAttrib.attribTime);
-                }
-                else if (attribute is DmxAttributeColor colorAttrib)
-                {
-                    Console.WriteLine(spacing + $"Color: {colorAttrib.attribRed}, {colorAttrib.attribGreen}, + {colorAttrib.attribBlue}, {colorAttrib.attribAlpha}");
-                }
-                else if (attribute is DmxAttributeVector2 vec2Attrib)
-                {
-                    Console.WriteLine(spacing + $"Vec2: {vec2Attrib.attribX}, {vec2Attrib.attribY}");
-                }
-                else if (attribute is DmxAttributeVector3 vec3Attrib)
-                {
-                    Console.WriteLine(spacing + $"Vec3: {vec3Attrib.attribX}, {vec3Attrib.attribY}, {vec3Attrib.attribZ}");
-                }
-                else if (attribute is DmxAttributeVector4 vec4Attrib)
-                {
-                    Console.WriteLine(spacing + $"Vec4: {vec4Attrib.attribX}, {vec4Attrib.attribY}, {vec4Attrib.attribZ}, {vec4Attrib.attribW}");
-                }
-                else if (attribute is DmxAttributeQAngle qAngleAttrib)
-                {
-                    Console.WriteLine(spacing + $"qAngle: {qAngleAttrib.attribX}, {qAngleAttrib.attribY}, {qAngleAttrib.attribZ}");
-                }
-                else if (attribute is DmxAttributeQuaternion quatAttrib)
-                {
-                    Console.WriteLine(spacing + $"Quaternion: {quatAttrib.attribX}, {quatAttrib.attribY}, {quatAttrib.attribZ}, {quatAttrib.attribW}");
-                }
-                else if (attribute is DmxAttributeMatrix matrixAttrib)
-                {
-                    Console.WriteLine(spacing + "Matrix");
-                }
-                #endregion
-
-
             }
         }
     }
@@ -400,7 +283,6 @@ namespace PCFReader
     {
         public string name;
         public List<DmxElement> elements;
-        public ArrayList attributes;
     }
 
     public class DmxElement
