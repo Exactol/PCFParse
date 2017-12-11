@@ -11,23 +11,26 @@ namespace PCFReader
     {
         static void Main(string[] args)
         {
-            Reader pcfReader = new Reader("asw_environmental_fx.pcf");
+            Reader pcfReader = new Reader("bagel_event_fx.pcf");
             PCF pcf = pcfReader.Read();
             //pcf.GetParticleNames();
 
-            List<string> materialNames = pcf.GetMaterialNames();
+            //List<string> materialNames = pcf.GetMaterialNames();
 
-            foreach (string material in materialNames)
-            {
-                Console.WriteLine("Material: " + material);
-            }
+            //foreach (string material in materialNames)
+            //{
+            //    Console.WriteLine("Material: " + material);
+            //}
 
-            List<string> modelNames = pcf.GetModelNames();
+            //List<string> modelNames = pcf.GetModelNames();
 
-            foreach (string model in modelNames)
-            {
-                Console.WriteLine("Model: " + model);
-            }
+            //foreach (string model in modelNames)
+            //{
+            //    Console.WriteLine("Model: " + model);
+            //}
+
+            pcf.PrintFileStructure();
+
             Console.ReadLine();
         }
     }

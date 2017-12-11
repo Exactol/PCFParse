@@ -146,7 +146,7 @@ namespace PCFReader
             {
                 if (pcf.BinaryVersion != 4 && pcf.BinaryVersion != 5)
                 {
-                    DmxElement element;
+                    DmxElement element = new DmxElement();
                     //Get name index and string from string dict
                     element.typeNameIndex = _binaryReader.ReadUInt16();
                     element.typeName = pcf.StringDict[element.typeNameIndex];
@@ -167,7 +167,7 @@ namespace PCFReader
                 }
                 else if (pcf.BinaryVersion == 4)
                 {
-                    DmxElementV4 element;
+                    DmxElementV4 element = new DmxElementV4();
                     //Get name index and string from string dict
                     element.typeNameIndex = _binaryReader.ReadUInt16();
                     element.typeName = pcf.StringDict[element.typeNameIndex];
@@ -189,7 +189,7 @@ namespace PCFReader
                 }
                 else
                 {
-                    DmxElementV4 element;
+                    DmxElementV4 element = new DmxElementV4();
                     //Get name index and string from string dict
                     element.typeNameIndex = _binaryReader.ReadUInt16();
                     element.typeName = pcf.StringDict[element.typeNameIndex];
@@ -241,10 +241,12 @@ namespace PCFReader
                 {
                     //Console.WriteLine($"\n-----Index: {w}-----");
 
-                    DmxAttribute dmxAttribute = new DmxAttribute();
+                    DmxAttribute dmxAttribute = new DmxAttribute
+                    {
+                        typeNameIndex = _binaryReader.ReadUInt16(),
+                        attributeType = _binaryReader.ReadByte(),
+                    };
 
-                    dmxAttribute.typeNameIndex = _binaryReader.ReadUInt16();
-                    dmxAttribute.attributeType = _binaryReader.ReadByte();
                     dmxAttribute.typeName = pcf.StringDict[dmxAttribute.typeNameIndex];
                     
                     //Console.WriteLine($"Number Of Element Attributes: {numElementAttribs}");
