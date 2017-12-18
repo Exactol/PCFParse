@@ -165,14 +165,13 @@ namespace PCFReader
                     {
                         particles.Add(particle);
                     }
-                    
-                    particle = new Particle()
+
+                    particle = new Particle
                     {
                         elements = new List<DmxElement>(),
-                        
+                        name = element.elementName,
                     };
 
-                    particle.name = element.elementName;
 
                 }
                 else
@@ -207,6 +206,7 @@ namespace PCFReader
             foreach (var attribute in elements)
             {
                 //Big if else switch to test for what type of attribute the attribute is
+                //TODO replace with dictionary
                 #region BigSwitch
                 if (attribute is DmxAttribute[] attributeArray)
                 {
